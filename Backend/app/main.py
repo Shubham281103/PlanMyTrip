@@ -16,14 +16,10 @@ from .agent import agent_instance
 from .pdf_generator import pdf_generator_instance, PDF_STORAGE_PATH
 from fastapi.responses import FileResponse
 
-# Create all tables in the database.
-# This is not needed if you are using Alembic migrations,
-# but can be useful for initial setup.
-# models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Trip Planner API")
 
-# CORS Middleware Configuration
+
 origins = [
     "http://localhost",
     "http://localhost:3000",
@@ -41,13 +37,16 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter()
 
+
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
 
+
 @router.get("/profile", response_model=schemas.User)
 def get_profile(current_user: models.User = Depends(get_current_user)):
     return current_user
+
 
 @router.post("/change-password")
 def change_password(
@@ -56,14 +55,17 @@ def change_password(
     current_user: models.User = Depends(get_current_user)
 ):
     if not pwd_context.verify(req.current_password, current_user.hashed_password):
-        raise HTTPException(status_code=400, detail="Current password is incorrect")
+        raise HTTPException(
+            status_code=400, detail="Current password is incorrect")
     hashed_new = pwd_context.hash(req.new_password)
     current_user.hashed_password = hashed_new
     db.add(current_user)
     db.commit()
     return {"msg": "Password updated successfully"}
 
+
 app.include_router(router)
+
 
 @app.post("/register", response_model=schemas.User)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
@@ -87,66 +89,71 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
 def read_users_me(current_user: models.User = Depends(get_current_user)):
     return current_user
 
+
 @app.post("/itineraries/", response_model=schemas.Itinerary)
 def create_itinerary(
-    itinerary: schemas.ItineraryCreate, 
-    db: Session = Depends(get_db), 
+    itinerary: schemas.ItineraryCreate,
+    db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    # 1. Generate itinerary content using the AI agent
+
     content = agent_instance.generate_itinerary(
         place=itinerary.destination,
         start_date=itinerary.start_date,
         end_date=itinerary.end_date
     )
-    
-    # 2. Generate PDF
+
     pdf_filename = pdf_generator_instance.generate(
         content=content,
         user_id=current_user.id,
         destination=itinerary.destination
     )
 
-    # 3. Save to database
     return crud.create_user_itinerary(
-        db=db, 
-        itinerary=itinerary, 
+        db=db,
+        itinerary=itinerary,
         user_id=current_user.id,
         pdf_path=pdf_filename,
         content=content
     )
 
+
 @app.get("/itineraries/", response_model=list[schemas.Itinerary])
 def read_itineraries(
-    skip: int = 0, 
-    limit: int = 100, 
-    db: Session = Depends(get_db), 
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    itineraries = crud.get_itineraries_by_user(db, user_id=current_user.id, skip=skip, limit=limit)
+    itineraries = crud.get_itineraries_by_user(
+        db, user_id=current_user.id, skip=skip, limit=limit)
     return itineraries
+
 
 @app.get("/itineraries/{itinerary_id}/download")
 def download_itinerary_pdf(
-    itinerary_id: int, 
-    db: Session = Depends(get_db), 
+    itinerary_id: int,
+    db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    itinerary = db.query(models.Itinerary).filter(models.Itinerary.id == itinerary_id).first()
+    itinerary = db.query(models.Itinerary).filter(
+        models.Itinerary.id == itinerary_id).first()
 
     if not itinerary:
         raise HTTPException(status_code=404, detail="Itinerary not found")
-    
+
     if itinerary.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized to access this itinerary")
-        
+        raise HTTPException(
+            status_code=403, detail="Not authorized to access this itinerary")
+
     pdf_path = f"{PDF_STORAGE_PATH}/{itinerary.pdf_path}"
 
     if not os.path.exists(pdf_path):
         raise HTTPException(status_code=404, detail="PDF file not found")
-        
+
     return FileResponse(pdf_path, media_type='application/pdf', filename=itinerary.pdf_path)
+
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the Trip Planner API"} 
+    return {"message": "Welcome to the Trip Planner API"}
