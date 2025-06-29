@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  db:
+    container_name: trip_planner_db
+    image: postgres:15
+    restart: always
+    environment:
+      - POSTGRES_USER=trip_planner_user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=trip_planner
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    container_name: trip_planner_backend
+    build: ./Backend
+    volumes:
+      - ./Backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://trip_planner_user:password@db:5432/trip_planner
+      - POSTGRES_USER=trip_planner_user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=trip_planner
+      # This will be needed for JWT
+      - SECRET_KEY=my-very-secret-key-that-is-long-enough
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - OPENAI_API_KEY=key
+    depends_on:
+      - db
+    entrypoint: /app/entrypoint.sh
+
+  frontend:
+    container_name: trip_planner_frontend
+    build: ./travel-itinerary-frontend
+    volumes:
+      - ./travel-itinerary-frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+
+networks:
+  default: 
