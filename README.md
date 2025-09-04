@@ -1,14 +1,22 @@
 # AI-Powered Trip Planner
 
-This is a full-stack web application that allows users to generate travel itineraries using an AI-powered agent. Users can register, log in, create travel plans for specific destinations, view their past trips, and download itineraries as PDF files.
+This is a full-stack web application that allows users to generate personalized travel itineraries using an AI-powered agent. Users can register, log in, create travel plans with custom preferences for specific destinations, view their past trips, and download itineraries as PDF files.
 
 ## Features
 
--   **User Authentication:** Secure user registration and JWT-based login system.
--   **AI Itinerary Generation:** Dynamically generates multi-day travel itineraries using a Large Language Model (LLM).
+-   **User Authentication:** Secure user registration and JWT-based login system with profile management.
+-   **AI Itinerary Generation:** Dynamically generates personalized multi-day travel itineraries using a Large Language Model (LLM).
+-   **Trip Preferences & Personalization:** 
+    - Trip themes (Adventure, Religious, Cultural, Foodie, Relaxation, Romantic, Family-friendly)
+    - Budget levels (low, medium, high)
+    - Pace preferences (relaxed, packed)
+    - Travel modes (walking, cab, public transport, self drive)
+    - Group types (solo, couple, family, friends, senior friendly)
+-   **Smart Recommendations:** AI generates theme-based and group-specific activity suggestions.
 -   **Destination & Duration:** Users can specify a destination and the number of days for their trip.
--   **Past Trips:** View a dashboard of all previously generated itineraries.
+-   **Past Trips:** View a dashboard of all previously generated itineraries with their preferences.
 -   **PDF Download:** Download any itinerary as a formatted PDF document.
+-   **Profile Management:** View profile details and change password functionality.
 -   **Responsive UI:** A modern, responsive user interface built with React and Tailwind CSS.
 -   **Containerized:** The entire application is containerized with Docker for easy setup and deployment.
 
@@ -139,4 +147,4 @@ The project is organized into two main directories:
     -   `package.json`: Node.js dependencies.
 -   `docker-compose.yml`: Defines and orchestrates the multi-container application.
 -   `Project_Workflow_Documentation.md`: Detailed documentation on the project workflow and architecture.
--   `README.md`: This file. 
+-   `README.md`: This file.
