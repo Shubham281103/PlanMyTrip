@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 
 PDF_STORAGE_PATH = "/app/generated_pdfs"
+FONT_PATH = os.path.join(os.path.dirname(__file__), "fonts", "DejaVuSans.ttf")
 
 class PDFGenerator:
     def generate(self, content: str, user_id: int, destination: str) -> str:
@@ -11,7 +12,9 @@ class PDFGenerator:
         
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_font("Arial", size=12)
+        # Register and use the Unicode font
+        pdf.add_font("DejaVu", "", FONT_PATH, uni=True)
+        pdf.set_font("DejaVu", size=12)
         
         # Add content to the PDF
         pdf.multi_cell(0, 10, content)
@@ -26,4 +29,4 @@ class PDFGenerator:
         
         return filename
 
-pdf_generator_instance = PDFGenerator() 
+pdf_generator_instance = PDFGenerator()
