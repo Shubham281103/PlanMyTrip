@@ -7,6 +7,12 @@ class ItineraryBase(BaseModel):
     destination: str
     start_date: date
     end_date: date
+    # Trip Preferences
+    trip_theme: Optional[List[str]] = []
+    budget: Optional[str] = None
+    pace: Optional[str] = None
+    travel_mode: Optional[str] = None
+    group_type: Optional[str] = None
 
 class ItineraryCreate(ItineraryBase):
     pass
@@ -44,4 +50,4 @@ class Token(BaseModel):
     token_type: str
 
 class TokenData(BaseModel):
-    username: Optional[str] = None 
+    username: Optional[str] = None

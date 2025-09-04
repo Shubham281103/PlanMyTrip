@@ -2,12 +2,12 @@ import os
 import requests
 import logging
 from datetime import date
+from typing import List, Optional
 
 from langchain.tools import tool
 from langchain.agents import initialize_agent, AgentType
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -48,8 +48,6 @@ class AIAgent:
         try:
             resp = requests.get(url, headers=headers, timeout=10)
             resp.raise_for_status()
-            # Note: _safe_get_json is an instance method, can't be called directly from staticmethod
-            # A simple workaround for now:
             try:
                 geo = resp.json()
             except requests.exceptions.JSONDecodeError:
@@ -139,19 +137,76 @@ class AIAgent:
             return ["Error: Number of days must be an integer."]
         return AIAgent._suggest_itinerary(city, days)
 
-    def generate_itinerary(self, place: str, start_date: date, end_date: date) -> str:
-        prompt = f"""Generate a detailed travel itinerary for a trip to {place} from {start_date} to {end_date}. Please include:
+    def generate_itinerary(
+        self, 
+        place: str, 
+        start_date: date, 
+        end_date: date,
+        trip_theme: Optional[List[str]] = None,
+        budget: Optional[str] = None,
+        pace: Optional[str] = None,
+        travel_mode: Optional[str] = None,
+        group_type: Optional[str] = None
+    ) -> str:
+        preferences_context = ""
+        if trip_theme:
+            preferences_context += f"\nTrip Themes: {', '.join(trip_theme)}"
+        if budget:
+            preferences_context += f"\nBudget Level: {budget}"
+        if pace:
+            preferences_context += f"\nPace Preference: {pace}"
+        if travel_mode:
+            preferences_context += f"\nPreferred Travel Mode: {travel_mode}"
+        if group_type:
+            preferences_context += f"\nGroup Type: {group_type}"
+
+        theme_recommendations = ""
+        if trip_theme:
+            theme_recommendations = "\n\nTheme-Based Recommendations:\n"
+            for theme in trip_theme:
+                if theme.lower() == "adventure":
+                    theme_recommendations += "- Focus on outdoor activities, trekking, adventure sports, and adrenaline-pumping experiences\n"
+                elif theme.lower() == "religious":
+                    theme_recommendations += "- Include temples, holy sites, spiritual experiences, and religious festivals\n"
+                elif theme.lower() == "cultural":
+                    theme_recommendations += "- Emphasize museums, historical sites, local traditions, and cultural experiences\n"
+                elif theme.lower() == "foodie":
+                    theme_recommendations += "- Highlight local cuisine, food tours, cooking classes, and famous restaurants\n"
+                elif theme.lower() == "relaxation":
+                    theme_recommendations += "- Focus on spas, beaches, peaceful locations, and stress-free activities\n"
+                elif theme.lower() == "romantic":
+                    theme_recommendations += "- Include romantic spots, couple activities, scenic views, and intimate dining\n"
+                elif theme.lower() == "family-friendly":
+                    theme_recommendations += "- Ensure child-safe activities, family restaurants, and kid-friendly attractions\n"
+
+        group_recommendations = ""
+        if group_type:
+            group_recommendations = "\n\nGroup-Specific Recommendations:\n"
+            if group_type.lower() == "solo":
+                group_recommendations += "- Include solo-friendly activities, social opportunities, and safe travel options\n"
+            elif group_type.lower() == "couple":
+                group_recommendations += "- Focus on romantic activities, intimate dining, and couple-friendly experiences\n"
+            elif group_type.lower() == "family":
+                group_recommendations += "- Ensure child-safe activities, family restaurants, and kid-friendly attractions\n"
+            elif group_type.lower() == "friends":
+                group_recommendations += "- Include group activities, social experiences, nightlife, and fun group adventures\n"
+            elif group_type.lower() == "senior_friendly":
+                group_recommendations += "- Focus on accessible activities, comfortable transportation, and senior-friendly accommodations\n"
+
+        prompt = f"""Generate a detailed travel itinerary for a trip to {place} from {start_date} to {end_date}.{preferences_context}
+
+        Please include:
         - Daily breakdown: A day-by-day plan with specific activities, attractions, and recommended timings.
         - Weather considerations: Suggest activities and packing advice based on the typical weather conditions in {place} during that time.
-        - Transportation: Recommendations for getting around.
-        - Accommodation suggestions: Briefly mention suitable accommodation types (budget, mid-range, luxury).
+        - Transportation: Recommendations for getting around based on the preferred travel mode.
+        - Accommodation suggestions: Briefly mention suitable accommodation types based on budget level.
         - Food recommendations: Highlight local dishes or restaurants.
         - Optional activities: Include a few extra suggestions.
-        - Practical tips: Any essential travel tips (currency, language, safety).
-        Please present the itinerary in a clear, organized, and professional format."""
+        - Practical tips: Any essential travel tips (currency, language, safety).{theme_recommendations}{group_recommendations}
+        
+        Please present the itinerary in a clear, organized, and professional format that aligns with the specified preferences."""
         
         response = self.agent.run(prompt)
         return response
 
-# Create a single instance of the agent to be used by the app
-agent_instance = AIAgent() 
+agent_instance = AIAgent()

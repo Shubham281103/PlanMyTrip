@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Date, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, Date, ForeignKey, ARRAY
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -25,5 +25,11 @@ class Itinerary(Base):
     content = Column(Text, nullable=True)
     pdf_path = Column(String, nullable=True)
     owner_id = Column(Integer, ForeignKey("users.id"))
+    
+    trip_theme = Column(ARRAY(String), nullable=True, default=[])
+    budget = Column(String, nullable=True)
+    pace = Column(String, nullable=True)
+    travel_mode = Column(String, nullable=True)
+    group_type = Column(String, nullable=True)
 
-    owner = relationship("User", back_populates="itineraries") 
+    owner = relationship("User", back_populates="itineraries")

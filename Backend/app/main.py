@@ -96,11 +96,16 @@ def create_itinerary(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-
+    # Generate itinerary with preferences
     content = agent_instance.generate_itinerary(
         place=itinerary.destination,
         start_date=itinerary.start_date,
-        end_date=itinerary.end_date
+        end_date=itinerary.end_date,
+        trip_theme=itinerary.trip_theme,
+        budget=itinerary.budget,
+        pace=itinerary.pace,
+        travel_mode=itinerary.travel_mode,
+        group_type=itinerary.group_type
     )
 
     pdf_filename = pdf_generator_instance.generate(
